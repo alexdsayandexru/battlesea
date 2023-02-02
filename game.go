@@ -1,97 +1,70 @@
 package main
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+	"os"
+)
 
-type battlefield [][]string
-
-type Battle struct {
-	fieldInn battlefield
-	fieldOut battlefield
+type Game struct {
+	comp   *Battle
+	player *Battle
 }
 
-func CreateBattle () *Battle {
-	return &Battle{}
+func CreateGame() *Game {
+	game := Game{comp: CreateBattle(), player: CreateBattle()}
+	game.comp.Init()
+	game.player.Init()
+	return &game
 }
 
-func (b *Battle) Init() {
-	b.fieldInn = battlefield{
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
+func (g *Game) Print() {
+	header := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+	fmt.Print(" ")
+	fmt.Print(header)
+	fmt.Println(header)
+	for i := 0; i < len(g.comp.fieldOut); i++ {
+		fmt.Print(i)
+		fmt.Print(g.comp.fieldOut[i])
+		fmt.Println(g.player.fieldInn[i])
 	}
-	b.fieldOut = battlefield{
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-		{" "," "," "," "," "," "," "," "," "," "},
-	}
+}
 
-	ships := 0
-	for i:=0; i<100; i++ {
-		if ships < 5 && setShip(rand.Intn(10),rand.Intn(10), b.fieldInn) {
-			ships++
+func (g *Game) StepComp() bool {
+	ok := false
+	isGameOver := false
+
+	for i := 0; i < 200; i++ {
+		ok, isGameOver = g.player.MakeShot(rand.Intn(10), rand.Intn(10), false)
+		if ok {
+			g.Print()
+			break
 		}
 	}
-	
+	return isGameOver
 }
 
-func set(i int, j int, field battlefield, ch string) {
-	if i >= 0 && i < len(field) && j >= 0 && j < len(field) {
-		field[i][j] = ch
-	}
+func (g *Game) StepPlayer() bool {
+	var hv string
+	fmt.Fscan(os.Stdin, &hv)
+	i, j := byteToIndex(hv[0], hv[1])
+	_, isGameOver := g.comp.MakeShot(i, j, true)
+	g.Print()
+
+	return isGameOver
 }
 
-func setShip(i int, j int, field battlefield) bool {
-	ch := "."
-	if field[i][j] == " " {
-		set(i-1, j-1, field, ch)
-		set(i-1, j, field, ch)
-		set(i-1, j+1, field, ch)
-		set(i, j-1, field, ch)
-		set(i, j, field, "v")
-		set(i, j+1, field, ch)
-		set(i+1, j-1, field, ch)
-		set(i+1, j, field, ch)
-		set(i+1, j+1, field, ch)
-		return true
-	}
-	return false
-}
+func Run() {
+	game := CreateGame()
+	game.Print()
 
-func (b *Battle) shot(i int, j int) (bool, bool) {
-	if b.fieldInn[i][j] == " " || b.fieldInn[i][j] == "." {
-		b.fieldInn[i][j] = "*"
-		b.fieldOut[i][j] = "*"
-		return true, false
-	} else if  b.fieldInn[i][j] == "v" {
-		b.fieldInn[i][j] = "x"
-		setShip(i,j,b.fieldOut)
-		return true, b.isGameOver()
-	}
-	return false, false
-}
+	isGameOver := false
 
-func (b *Battle) isGameOver() bool {
-	ship := 0
-	for _, row := range b.fieldInn {
-		for _, e := range row {
-			if e == "v" {
-				ship++
-			}
+	for !isGameOver {
+		isGameOver = game.StepPlayer()
+		if !isGameOver {
+			isGameOver = game.StepComp()
 		}
 	}
-	return ship == 0
+	fmt.Println("The Game is Over!!!")
 }
