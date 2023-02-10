@@ -18,12 +18,6 @@ func printBattleField(c battlefield, m battlefield) {
 	}
 }
 
-func byteToIndex(h byte, v byte) (int, int) {
-	i := v - 48
-	j := h - 97
-	return int(i), int(j)
-}
-
 func Test() {
 	battle := CreateBattle()
 	battle.Init()

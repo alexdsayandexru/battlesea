@@ -6,15 +6,21 @@ import (
 	"os"
 )
 
+const (
+	countShips = 2
+)
+
 type Game struct {
+	GameOver bool
 	comp   *Battle
 	player *Battle
 }
 
-func CreateGame() *Game {
-	game := Game{comp: CreateBattle(), player: CreateBattle()}
-	game.comp.Init()
-	game.player.Init()
+func Start() *Game {
+	game := Game{GameOver: false, comp: NewBattle(), player: NewBattle()}
+	game.comp.Init(countShips)
+	game.player.Init(countShips)
+	game.Print()
 	return &game
 }
 
@@ -25,46 +31,61 @@ func (g *Game) Print() {
 	fmt.Println(header)
 	for i := 0; i < len(g.comp.fieldOut); i++ {
 		fmt.Print(i)
-		fmt.Print(g.comp.fieldOut[i])
+		//fmt.Print(g.comp.fieldOut[i])
+		fmt.Print(g.comp.fieldInn[i])
 		fmt.Println(g.player.fieldInn[i])
 	}
 }
 
-func (g *Game) StepComp() bool {
-	ok := false
-	isGameOver := false
-
-	for i := 0; i < 200; i++ {
-		ok, isGameOver = g.player.MakeShot(rand.Intn(10), rand.Intn(10), false)
-		if ok {
-			g.Print()
-			break
-		}
-	}
-	return isGameOver
+func getRandIndex(maxIndex int) (int, int) {
+	return rand.Intn(maxIndex), rand.Intn(maxIndex)
 }
 
-func (g *Game) StepPlayer() bool {
-	var hv string
-	fmt.Fscan(os.Stdin, &hv)
-	i, j := byteToIndex(hv[0], hv[1])
-	_, isGameOver := g.comp.MakeShot(i, j, true)
-	g.Print()
+func byteToIndex(h byte, v byte) (int, int) {
+	i := v - 48
+	j := h - 97
+	return int(i), int(j)
+}
 
-	return isGameOver
+func (g *Game) MakeShotComp() bool {
+	if !g.GameOver {
+		for i := 0; i < 200; i++ {
+			i, j := getRandIndex(10)
+			if g.player.MakeShot(i, j, false) {
+				break
+			}
+		}
+		g.GameOver = g.player.GameOver
+	}
+	return !g.GameOver
+}
+
+func (g *Game) MakeShotPlayer() bool {
+	if !g.GameOver {
+		var ij string
+		fmt.Fscan(os.Stdin, &ij)
+		i, j := byteToIndex(ij[0], ij[1])
+		g.comp.MakeShot(i, j, true)
+		g.GameOver = g.comp.GameOver
+	}
+	return !g.GameOver
+}
+
+func (g *Game) Complete() {
+	g.Print()
+	if g.comp.GameOver {
+		fmt.Println("The Game is Over!!!\nThe Winner is Player!!!")
+	} else if g.player.GameOver {
+		fmt.Println("The Game is Over!!!\nThe Winner is Computer!!!")
+	}
 }
 
 func Run() {
-	game := CreateGame()
-	game.Print()
+	game := Start()
 
-	isGameOver := false
-
-	for !isGameOver {
-		isGameOver = game.StepPlayer()
-		if !isGameOver {
-			isGameOver = game.StepComp()
-		}
+	for game.MakeShotPlayer() && game.MakeShotComp() {
+		game.Print()
 	}
-	fmt.Println("The Game is Over!!!")
+
+	game.Complete()
 }

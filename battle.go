@@ -13,15 +13,17 @@ const (
 type battlefield [][]string
 
 type Battle struct {
+	GameOver bool
 	fieldInn battlefield
 	fieldOut battlefield
 }
 
-func CreateBattle() *Battle {
+func NewBattle() *Battle {
 	return &Battle{}
 }
 
-func (b *Battle) Init() {
+func (b *Battle) Init(countShips int) {
+	b.GameOver = false
 	b.fieldInn = battlefield{
 		{void, void, void, void, void, void, void, void, void, void},
 		{void, void, void, void, void, void, void, void, void, void},
@@ -46,16 +48,22 @@ func (b *Battle) Init() {
 		{void, void, void, void, void, void, void, void, void, void},
 		{void, void, void, void, void, void, void, void, void, void},
 	}
-	b.genShips(10)
+	//b.genShips(countShips)
+	b.genShipsTest()
 }
 
-func (b *Battle) genShips(count int) {
+func (b *Battle) genShips(countShips int) {
 	ships := 0
 	for i := 0; i < 100; i++ {
-		if ships < count && setShip(rand.Intn(10), rand.Intn(10), b.fieldInn) {
+		if ships < countShips && setShip(rand.Intn(10), rand.Intn(10), b.fieldInn) {
 			ships++
 		}
 	}
+}
+
+func (b *Battle) genShipsTest() {
+	setShip(1, 7, b.fieldInn)
+	setShip(7, 9, b.fieldInn)
 }
 
 func set(i int, j int, field battlefield, char string) {
@@ -80,24 +88,22 @@ func setShip(i int, j int, field battlefield) bool {
 	return false
 }
 
-func (b *Battle) MakeShot(i int, j int, isPlayer bool) (bool, bool) {
-	if b.fieldInn[i][j] == void {
+func (b *Battle) MakeShot(i int, j int, isPlayer bool) (bool) {
+	if b.GameOver {
+		return false
+	}
+
+	if (b.fieldInn[i][j] == void) || (b.fieldInn[i][j] == shadow && isPlayer) {
 		b.fieldInn[i][j] = shot
 		b.fieldOut[i][j] = shot
-		return true, false
-	} else if b.fieldInn[i][j] == shadow {
-		if isPlayer {
-			b.fieldInn[i][j] = shot
-			b.fieldOut[i][j] = shot
-			return true, false
-		}
-		return false, false
+		return true
 	} else if b.fieldInn[i][j] == ship {
 		b.fieldInn[i][j] = kill
 		setShip(i, j, b.fieldOut)
-		return true, b.isGameOver()
+		b.GameOver = b.isGameOver()
+		return true
 	}
-	return false, false
+	return false
 }
 
 func (b *Battle) isGameOver() bool {
