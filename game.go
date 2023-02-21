@@ -31,9 +31,13 @@ func (g *Game) Print() {
 	fmt.Println(header)
 	for i := 0; i < len(g.comp.fieldOut); i++ {
 		fmt.Print(i)
-		//fmt.Print(g.comp.fieldOut[i])
-		fmt.Print(g.comp.fieldInn[i])
-		fmt.Println(g.player.fieldInn[i])
+		if debug {
+			fmt.Print(g.comp.fieldInn[i])
+			fmt.Println(g.player.fieldInn[i])
+		} else {
+			fmt.Print(g.comp.fieldOut[i])
+			fmt.Println(g.player.fieldInn[i])
+		}
 	}
 }
 
@@ -62,17 +66,17 @@ func (g *Game) MakeShotComp() bool {
 
 func (g *Game) MakeShotPlayer() bool {
 	if !g.GameOver {
-		var ij string
-		fmt.Fscan(os.Stdin, &ij)
-		if ij == "q" {
+		var yx string
+		fmt.Fscan(os.Stdin, &yx)
+		if yx == "q" {
 			g.GameOver = true
 			return false
-		} else if ij == "s" {
+		} else if yx == "s" {
 			g.GameOver = false
 			return false
 		}
-		i, j := byteToIndex(ij[0], ij[1])
-		g.comp.MakeShot(i, j, true)
+		y, x := byteToIndex(yx[0], yx[1])
+		g.comp.MakeShot(y, x, true)
 		g.GameOver = g.comp.GameOver
 	}
 	return !g.GameOver

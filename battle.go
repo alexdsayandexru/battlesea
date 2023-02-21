@@ -8,6 +8,7 @@ const (
 	shadow = "."
 	shot   = "*"
 	kill   = "x"
+	fieldSize = 10
 )
 
 type point struct {
@@ -59,26 +60,6 @@ func (b *Battle) Init(countOneShips int) {
 	b.genShips(1, 4)
 }
 
-func genVShip(countDeck int) []point {
-	points := []point{}
-	y := rand.Intn(10)
-	x := rand.Intn(10 - countDeck + 1) + countDeck - 1
-	for i:=0; i<countDeck; i++ {
-		points = append(points, point{y: y, x: x - i})
-	}
-	return points
-}
-
-func genHShip(countDeck int) []point {
-	points := []point{}
-	y := rand.Intn(10 - countDeck + 1) + countDeck - 1
-	x := rand.Intn(10) 
-	for i:=0; i<countDeck; i++ {
-		points = append(points, point{y: y - i, x: x})
-	}
-	return points
-}
-
 func (b *Battle) genShips(countDeck int, countShips int) bool {
 	ships := 0
 	for i := 0; i < 100; i++ {
@@ -98,6 +79,30 @@ func (b *Battle) genShips(countDeck int, countShips int) bool {
 		}
 	}
 	return false
+}
+
+func genVShip(size int) []point {
+	points := []point{}
+	y, x := getRandYX(size)
+	for i:=0; i<size; i++ {
+		points = append(points, point{y: y, x: x - i})
+	}
+	return points
+}
+
+func genHShip(size int) []point {
+	points := []point{}
+	x, y := getRandYX(size)
+	for i:=0; i<size; i++ {
+		points = append(points, point{y: y - i, x: x})
+	}
+	return points
+}
+
+func getRandYX(size int) (int, int) {
+	y := rand.Intn(fieldSize)
+	x := rand.Intn(fieldSize - size + 1) + size - 1
+	return y, x
 }
 
 func thereIsVoidArea (points []point, field battlefield) bool {
@@ -148,7 +153,8 @@ func (b *Battle) MakeShot(y int, x int, isPlayer bool) (bool) {
 		return true
 	} else if b.fieldInn[y][x] == ship {
 		b.fieldInn[y][x] = kill
-		placeShipElement(point{y: y, x: x}, b.fieldOut)
+		b.fieldOut[y][x] = kill
+		//placeShipElement(point{y: y, x: x}, b.fieldOut)
 		b.GameOver = b.isGameOver()
 		return true
 	}
