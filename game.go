@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	countShips = 2
+	countOneShips = 10
 )
 
 type Game struct {
@@ -18,8 +18,8 @@ type Game struct {
 
 func Start() *Game {
 	game := Game{GameOver: false, comp: NewBattle(), player: NewBattle()}
-	game.comp.Init(countShips)
-	game.player.Init(countShips)
+	game.comp.Init(countOneShips)
+	game.player.Init(countOneShips)
 	game.Print()
 	return &game
 }
@@ -64,6 +64,13 @@ func (g *Game) MakeShotPlayer() bool {
 	if !g.GameOver {
 		var ij string
 		fmt.Fscan(os.Stdin, &ij)
+		if ij == "q" {
+			g.GameOver = true
+			return false
+		} else if ij == "s" {
+			g.GameOver = false
+			return false
+		}
 		i, j := byteToIndex(ij[0], ij[1])
 		g.comp.MakeShot(i, j, true)
 		g.GameOver = g.comp.GameOver
@@ -88,4 +95,8 @@ func Run() {
 	}
 
 	game.Complete()
+
+	if game.GameOver == false {
+		Run()
+	}
 }

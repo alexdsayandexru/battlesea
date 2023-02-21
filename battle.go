@@ -10,6 +10,11 @@ const (
 	kill   = "x"
 )
 
+type point struct {
+	x int
+	y int
+}
+
 type battlefield [][]string
 
 type Battle struct {
@@ -22,7 +27,7 @@ func NewBattle() *Battle {
 	return &Battle{}
 }
 
-func (b *Battle) Init(countShips int) {
+func (b *Battle) Init(countOneShips int) {
 	b.GameOver = false
 	b.fieldInn = battlefield{
 		{void, void, void, void, void, void, void, void, void, void},
@@ -48,58 +53,102 @@ func (b *Battle) Init(countShips int) {
 		{void, void, void, void, void, void, void, void, void, void},
 		{void, void, void, void, void, void, void, void, void, void},
 	}
-	//b.genShips(countShips)
-	b.genShipsTest()
+	b.genShips(4, 1)
+	b.genShips(3, 2)
+	b.genShips(2, 3)
+	b.genShips(1, 4)
 }
 
-func (b *Battle) genShips(countShips int) {
+func genVShip(countDeck int) []point {
+	points := []point{}
+	y := rand.Intn(10)
+	x := rand.Intn(10 - countDeck + 1) + countDeck - 1
+	for i:=0; i<countDeck; i++ {
+		points = append(points, point{y: y, x: x - i})
+	}
+	return points
+}
+
+func genHShip(countDeck int) []point {
+	points := []point{}
+	y := rand.Intn(10 - countDeck + 1) + countDeck - 1
+	x := rand.Intn(10) 
+	for i:=0; i<countDeck; i++ {
+		points = append(points, point{y: y - i, x: x})
+	}
+	return points
+}
+
+func (b *Battle) genShips(countDeck int, countShips int) bool {
 	ships := 0
 	for i := 0; i < 100; i++ {
-		if ships < countShips && setShip(rand.Intn(10), rand.Intn(10), b.fieldInn) {
+		points := genVShip(countDeck)
+		if placeShip(points, b.fieldInn) {
 			ships++
 		}
+		if ships >= countShips {
+			return true
+		}
+		points = genHShip(countDeck)
+		if placeShip(points, b.fieldInn) {
+			ships++
+		}
+		if ships >= countShips {
+			return true
+		}
 	}
+	return false
 }
 
-func (b *Battle) genShipsTest() {
-	setShip(1, 7, b.fieldInn)
-	setShip(7, 9, b.fieldInn)
-}
-
-func set(i int, j int, field battlefield, char string) {
-	if i >= 0 && i < len(field) && j >= 0 && j < len(field) {
-		field[i][j] = char
+func thereIsVoidArea (points []point, field battlefield) bool {
+	for _, p := range points {
+		if field[p.y][p.x] != void {
+			return false
+		}
 	}
+	return true
 }
 
-func setShip(i int, j int, field battlefield) bool {
-	if field[i][j] == void {
-		set(i-1, j-1, field, shadow)
-		set(i-1, j, field, shadow)
-		set(i-1, j+1, field, shadow)
-		set(i, j-1, field, shadow)
-		set(i, j, field, ship)
-		set(i, j+1, field, shadow)
-		set(i+1, j-1, field, shadow)
-		set(i+1, j, field, shadow)
-		set(i+1, j+1, field, shadow)
+func placeShip(points []point, field battlefield) bool {
+	if thereIsVoidArea(points, field) {
+		for _, p := range points {
+			placeShipElement(p, field)
+		}
 		return true
 	}
 	return false
 }
 
-func (b *Battle) MakeShot(i int, j int, isPlayer bool) (bool) {
+func placeShipElement(p point, field battlefield) {
+	placeElement(p.y-1, p.x-1, field, shadow)
+	placeElement(p.y-1, p.x, field, shadow)
+	placeElement(p.y-1, p.x+1, field, shadow)
+	placeElement(p.y, p.x-1, field, shadow)
+	placeElement(p.y, p.x, field, ship)
+	placeElement(p.y, p.x+1, field, shadow)
+	placeElement(p.y+1, p.x-1, field, shadow)
+	placeElement(p.y+1, p.x, field, shadow)
+	placeElement(p.y+1, p.x+1, field, shadow)
+}
+
+func placeElement(y int, x int, field battlefield, char string) {
+	if y >= 0 && y < len(field) && x >= 0 && x < len(field) && field[y][x] != ship {
+		field[y][x] = char
+	}
+}
+
+func (b *Battle) MakeShot(y int, x int, isPlayer bool) (bool) {
 	if b.GameOver {
 		return false
 	}
 
-	if (b.fieldInn[i][j] == void) || (b.fieldInn[i][j] == shadow && isPlayer) {
-		b.fieldInn[i][j] = shot
-		b.fieldOut[i][j] = shot
+	if (b.fieldInn[y][x] == void) || (b.fieldInn[y][x] == shadow && isPlayer) {
+		b.fieldInn[y][x] = shot
+		b.fieldOut[y][x] = shot
 		return true
-	} else if b.fieldInn[i][j] == ship {
-		b.fieldInn[i][j] = kill
-		setShip(i, j, b.fieldOut)
+	} else if b.fieldInn[y][x] == ship {
+		b.fieldInn[y][x] = kill
+		placeShipElement(point{y: y, x: x}, b.fieldOut)
 		b.GameOver = b.isGameOver()
 		return true
 	}
