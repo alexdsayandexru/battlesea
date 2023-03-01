@@ -24,6 +24,23 @@ func Start() *Game {
 	return &game
 }
 
+func replace(array []string, old string, new string) []string {
+	for i := 0; i < len(array); i++ {
+		if array[i] == old {
+			array[i] = new
+		}
+	}
+	return array
+}
+
+func print(row []string) {
+	fmt.Print(replace(row, shadow, void))
+}
+
+func println(row []string) {
+	fmt.Println(replace(row, shadow, void))
+}
+
 func (g *Game) Print() {
 	header := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
 	fmt.Print(" ")
@@ -32,11 +49,11 @@ func (g *Game) Print() {
 	for i := 0; i < len(g.comp.fieldOut); i++ {
 		fmt.Print(i)
 		if debug {
-			fmt.Print(g.comp.fieldInn[i])
-			fmt.Println(g.player.fieldInn[i])
+			print(g.comp.fieldInn[i])
+			println(g.player.fieldInn[i])
 		} else {
-			fmt.Print(g.comp.fieldOut[i])
-			fmt.Println(g.player.fieldInn[i])
+			print(g.comp.fieldOut[i])
+			println(g.player.fieldInn[i])
 		}
 	}
 }

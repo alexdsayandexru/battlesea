@@ -154,7 +154,6 @@ func (b *Battle) MakeShot(y int, x int, isPlayer bool) (bool) {
 	} else if b.fieldInn[y][x] == ship {
 		b.fieldInn[y][x] = kill
 		b.fieldOut[y][x] = kill
-		//placeShipElement(point{y: y, x: x}, b.fieldOut)
 		b.GameOver = b.isGameOver()
 		return true
 	}
